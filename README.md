@@ -3,6 +3,11 @@
 
 **下载链接**：[《分布式对象存储——原理、架构及Go语言实现》](https://www.lanzous.com/i7dvkzg)
 
+## 前言
+
+在执行前，需要根据自身网络环境，修改`/bin/startup.sh`中的网络配置参数，主要是IP、网关以及网卡名，如下图：
+![startupIpInfo](static/images/startupIPInfo.png)
+
 ## 第一章
 
 已实现书中的代码，能够正确运行，步骤如下：
