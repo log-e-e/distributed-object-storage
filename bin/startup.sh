@@ -1,3 +1,6 @@
+# 安装net-tools
+sudo apt install net-tools
+
 # 启动rabbitmq及添加rabbitmq环境变量
 sudo service rabbitmq-server start
 if [ $? != 0 ]; then

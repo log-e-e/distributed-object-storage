@@ -9,7 +9,7 @@ import (
 
 func getStream(objectName string) (io.Reader, error) {
     server := locate.Locate(objectName)
-    if server != "" {
+    if server == "" {
         return nil, fmt.Errorf("ERROR: object '%s' not found", objectName)
     }
     return object_stream.NewGetStream(server, objectName)
