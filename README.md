@@ -145,3 +145,85 @@ cd bin && chmod +x stop.sh && ./stop.sh
 本章的实现了`PUT`与`GET`操作，即对象的存储与查询功能，其操作命令与第一章相同，但是数据存储是随机存储，不再赘述。
 **注意**：在使用`curl`命令时，我们需要使用的是`apiServer`的请求地址，即在启动服务时生成的虚拟`IP:PORT`：`192.168.0.108:12345`或`192.168.0.109:12345`，
 若是没有使用`apiServer`的虚拟IP，则会是定向存储而非随机存储
+
+## 第三章
+
+已实现第三章的所有功能，但需要说明的是：笔者所使用的ES版本是截止目前的最新版（7.6.2），书中使用的ES版本是6.x。另外，ES接口的实现也没有按照书中的方式来，笔者使用
+的是ES的第三方包 [elastic](https://github.com/olivere/elastic) 实现的相关操作。并且，在测试期间遇到了关于命令`curl`的一点问题，会在后文提出。后续的内容，
+主要阐述基于第二章的基础上新增的功能与注意事项：
+
+**新增功能**
+- 获取指定对象的所有版本的元数据
+- 获取指定对象的具体版本的元数据
+- 删除对象（逻辑删除，仅通过修改元数据信息实现逻辑删除）
+
+### 1. 环境准备
+
+#### 1.1 在`startup.sh`中添加环境变量
+
+基于第二章的基础上，新增了Elasticsearch，因此我们需要安装ES。推荐 [华为的镜像站下载](https://mirrors.huaweicloud.com/elasticsearch/) ，速度极快，有所有的版本。
+安装完ES后，我们需要创建索引映射（不熟悉ES的胖友请自行学习）。ES7.x版本的创建方式与6.x的方式有些许不同，7.x去不建议使用type。因此，若是使用7.x版本的ES则不能按照书中的来：
+**使用kibana创建**
+```
+PUT /metadata
+{
+    "mappings": {
+        "properties": {
+            "name": {"type": "keyword"},
+            "version": {"type": "integer"},
+            "size": {"type": "integer"},
+            "hash": {"type": "keyword"}
+        }
+    }
+}
+```
+
+创建完索引与映射后，需要在`bin/startup.sh`中添加相应的环境变量，除此之外`startup.sh`无需做任何改变：
+```shell script
+export ES_SERVER=localhost:9200
+```
+
+#### 1.2 hash值shell脚本
+
+该shell脚本主要是为了方便生成哈希值，并且生成哈希值所采用的加密方式采用的是`SHA1`，这是因为在使用`SHA256`测试时发现其生成的哈希值存在`/`，这会导致在解析`url`获取
+对象名时出现问题，因此改用了`SHA1`。脚本调用方式如下：
+```shell script
+./hash-gen.sh "content"
+# 示例
+./hash-gen.sh "This is object content version-2"
+```
+
+### 2. 对象的PUT，GET，DELETE操作及定位服务
+
+#### 2.1 PUT操作
+
+PUT对象的命令相对于第二章的区别仅仅是在Digest头部添加了对象内容的哈希值，命令如下：
+```shell script
+curl -v 192.168.0.108:12345/objects/test -XPUT -d "This is object content version-1" -H "Digest: SHA-256=9AimTha2kCISf8bVfi1jPXo2BzY="
+```
+
+#### 2.2 Locate服务
+Locate服务相较于上一章的变化主要是使用对象的哈希值作为对象名，其他的无变化：
+```shell script
+curl -v 192.168.0.108:12345/locate/SoxiAi+lEo63eTZ6rc62tzw8kSA=
+```
+
+#### 2.3 GET操作
+
+**注意**：按照书中的方式`curl -v 192.168.0.108:12345/objects/test?version`请求数据，在Linux下是无效操作，需要对问号使用`\`进行转义
+
+```shell script
+# 查看对象名为test的所有版本的元数据信息
+curl -v 192.168.0.108:12345/objects/test
+# 查看对象名为test的指定版本的元数据信息，注意携带的参数的问号要转义
+curl -v 192.168.0.108:12345/objects/test\?version
+```
+
+#### 2.4 DELETE操作
+
+对象的删除是逻辑删除，规则：基于最新版本新增一个版本号，将size和hash值置空，表示该对象已被删除。命令：
+```shell script
+curl -v 192.168.0.108:12345/objects/test -XDELETE
+```
+
+删除后，我们使用GET操作相关的命令会看到新增一个版本，且其hash和size为空值。除此外，我们仍然可以获取旧版本的信息。

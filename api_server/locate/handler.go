@@ -13,7 +13,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    location := Locate(strings.Split(r.RequestURI, "/")[2])
+    location := Locate(strings.Split(r.URL.EscapedPath(), "/")[2])
     if location == "" {
         w.WriteHeader(http.StatusNotFound)
         return

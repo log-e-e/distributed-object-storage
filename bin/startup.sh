@@ -10,6 +10,7 @@ fi
 
 export RABBITMQ_SERVER=amqp://test:test@localhost:5672
 echo "INFO: finish startup RabbitMQ & set RABBITMQ_SERVER environment"
+export ES_SERVER=localhost:9200
 
 # -----------START: 网络配置，需根据自己的机器自行修改-----------
 port=12345  # 服务端口号
