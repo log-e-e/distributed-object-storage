@@ -7,6 +7,21 @@ if [ $? != 0 ]; then
   echo "Error: failed to startup rabbitmq"
   exit 1
 fi
+# 启动ES
+sudo systemctl start elasticsearch.service
+# 创建metadata索引和映射
+curl -XPUT localhost:9200/metadata -H 'Content-Type:application/json' -d '{
+  "mappings": {
+    "properties": {
+      "name": {"type": "keyword"},
+      "version": {"type": "integer"},
+      "size": {"type": "integer"},
+      "hash": {"type": "keyword"}
+    }
+  }
+}'
+echo ""
+echo "INFO: finish start elasticsearch && create index 'metadata' and mappings"
 
 export RABBITMQ_SERVER=amqp://test:test@localhost:5672
 echo "INFO: finish startup RabbitMQ & set RABBITMQ_SERVER environment"
@@ -53,6 +68,8 @@ for i in `seq 1 ${serverNodeAmount}` ; do
     nodeStorageRoot="${commonStoragePath}dataNode${i}"
     # 创建存储对象的objects文件夹
     mkdir -p ${nodeStorageRoot}/objects
+    # 创建对象数据临时缓存区temp
+    mkdir -p ${nodeStorageRoot}/temp
     # 启动数据服务器
     go run ${dataServerStartupPath} -storageRoot "${nodeStorageRoot}" -listenAddr "${newListenAddr}" &
     echo "INFO: new dataServer started. storageRoot=${nodeStorageRoot}, listenAddr=${newListenAddr}"

@@ -5,9 +5,35 @@ import (
     "distributed-object-storage/src/err_utils"
     "distributed-object-storage/src/rabbitmq"
     "os"
+    "path"
     "path/filepath"
     "strconv"
+    "sync"
 )
+
+var (
+    objectMap = make(map[string]bool)
+    mutex sync.Mutex
+)
+
+func ObjectExists(hash string) bool {
+    mutex.Lock()
+    _, ok := objectMap[hash]
+    mutex.Unlock()
+    return ok
+}
+
+func AddNewObject(hash string) {
+    mutex.Lock()
+    defer mutex.Unlock()
+    objectMap[hash] = true
+}
+
+func Delete(hash string) {
+    mutex.Lock()
+    defer mutex.Unlock()
+    delete(objectMap, hash)
+}
 
 func ListenLocate() {
     mq := rabbitmq.NewRabbitMQ(os.Getenv("RABBITMQ_SERVER"))
@@ -16,17 +42,19 @@ func ListenLocate() {
     mq.BindExchange("dataServers")
     channel := mq.Consume()
     for msg := range channel {
-        objectName, err := strconv.Unquote(string(msg.Body))
+        hash, err := strconv.Unquote(string(msg.Body))
         err_utils.PanicNonNilError(err)
-
-        filePath := filepath.Join(global.StoragePath, "objects", objectName)
-        if pathExist(filePath) {
+        if ObjectExists(hash) {
             mq.Send(msg.ReplyTo, global.ListenAddr)
         }
     }
 }
 
-func pathExist(path string) bool {
-    _, err := os.Stat(path)
-    return !os.IsNotExist(err)
+// 扫描节点上已有的对象文件，载入内存中
+func ScanObjects() {
+    files, _ := filepath.Glob(path.Join(global.StoragePath, "objects", "*"))
+    for i := 0; i < len(files); i++ {
+        hash := filepath.Base(files[i])
+        objectMap[hash] = true
+    }
 }

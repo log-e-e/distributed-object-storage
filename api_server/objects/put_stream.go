@@ -7,12 +7,12 @@ import (
     "log"
 )
 
-func putStream(objectName string) (*object_stream.PutStream, error) {
+func putStream(hash string, size int64) (*object_stream.TempPutStream, error) {
     server := heartbeat.ChooseRandomDataServer()
     log.Println("Choose random data server:", server)
 
     if server == "" {
         return nil, fmt.Errorf("Error: no alive data server\n")
     }
-    return object_stream.NewPutStream(server, objectName), nil
+    return object_stream.NewTempPutStream(server, hash, size)
 }

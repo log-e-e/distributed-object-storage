@@ -23,3 +23,6 @@ serverNodeAmount=8  # IP总数
 for i in `seq 1 ${serverNodeAmount}` ; do
   sudo ifconfig ${netCard}:${i} down
 done
+
+# 删除ES索引
+curl -X DELETE 'localhost:9200/metadata'

@@ -18,11 +18,11 @@ func put(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusBadRequest)
         return
     }
+    // 获取size值
+    size := utils.GetSizeFromHeader(r.Header)
 
     // 存储对象数据
-    // objectName由最初的对象名改为对象内容的hash值
-    objectName := url.PathEscape(hashVal)
-    statusCode, err := storeObject(r.Body, objectName)
+    statusCode, err := storeObject(r.Body, hashVal, size)
     if err != nil {
         log.Println(err)
         w.WriteHeader(statusCode)
@@ -34,7 +34,6 @@ func put(w http.ResponseWriter, r *http.Request) {
 
     // 添加元数据
     name := utils.GetObjectName(r.URL.EscapedPath())
-    size := utils.GetSizeFromHeader(r.Header)
     err = es.AddVersion(name, size, hashVal)
     if err != nil {
         log.Println(err)

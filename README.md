@@ -227,3 +227,36 @@ curl -v 192.168.0.108:12345/objects/test -XDELETE
 ```
 
 删除后，我们使用GET操作相关的命令会看到新增一个版本，且其hash和size为空值。除此外，我们仍然可以获取旧版本的信息。
+
+## 第四章
+
+已实现所有功能，能够正常地校验、去重及清理临时文件。并且，无相关功能调用命令的变化。下面会给出一些shell脚本的变化：
+
+### 1. `bin/startup.sh`
+
+在该脚本中，新增了关于ES的启动与索引和映射的创建命令。这样一来，关于环境准备的所有事情都无需进行额外操作。
+```shell script
+# 启动ES
+sudo systemctl start elasticsearch.service
+# 创建metadata索引和映射
+curl -XPUT localhost:9200/metadata -H 'Content-Type:application/json' -d '{
+  "mappings": {
+    "properties": {
+      "name": {"type": "keyword"},
+      "version": {"type": "integer"},
+      "size": {"type": "integer"},
+      "hash": {"type": "keyword"}
+    }
+  }
+}'
+echo ""
+echo "INFO: finish start elasticsearch && create index 'metadata' and mappings"
+```
+
+### 2. `bin/stop.sh`
+
+在该脚本中，新增了删除ES索引的命令
+```shell script
+# 删除ES索引
+curl -X DELETE 'localhost:9200/metadata'
+```

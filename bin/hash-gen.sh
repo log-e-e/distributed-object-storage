@@ -2,4 +2,4 @@
 content=$1
 # shellcheck disable=SC2006
 echo "Start generate `${content}` hash code..."
-echo -n "$content" | openssl dgst -sha1 -binary | base64
+echo -n "$content" | openssl dgst -sha256 -binary | base64

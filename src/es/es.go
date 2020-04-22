@@ -102,10 +102,6 @@ func GetMetadata(name string, version int) (Metadata, error) {
 }
 
 func PutMetadata(name string, version int, size int64, hash string) error {
-    if metadataExists(name, version, size, hash) {
-        return PutMetadata(name, version + 1, size, hash)
-    }
-
     metadata := Metadata{
         Name:    name,
         Version: version,
@@ -119,6 +115,7 @@ func PutMetadata(name string, version int, size int64, hash string) error {
         BodyJson(metadata).
         Refresh("wait_for").
         Do(context.Background())
+    // 注意：在put后，没有进行冲突校验，因为不知道如何使用elastic包校验冲突（手动捂脸）
     return err
 }
 

@@ -1,7 +1,6 @@
 package locate
 
 import (
-    "distributed-object-storage/src/err_utils"
     "distributed-object-storage/src/rabbitmq"
     "log"
     "os"
@@ -21,10 +20,13 @@ func Locate(objectName string) string {
     }()
     // 准备接收消息
     msg := <- channel
-    result, err := strconv.Unquote(string(msg.Body))
-    err_utils.PanicNonNilError(err)
-    log.Printf("INFO: object at server '%s'\n", result)
-    
+    result, _ := strconv.Unquote(string(msg.Body))
+    if result != "" {
+        log.Printf("INFO: object [%s] at server '%s'\n", objectName, result)
+    } else {
+        log.Printf("INFO: object [%s] not found\n", objectName)
+    }
+
     return result
 }
 
