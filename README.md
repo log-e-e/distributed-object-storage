@@ -185,7 +185,7 @@ export ES_SERVER=localhost:9200
 
 #### 1.2 hash值shell脚本
 
-该shell脚本主要是为了方便生成哈希值，并且生成哈希值所采用的加密方式采用的是`SHA1`，这是因为在使用`SHA256`测试时发现其生成的哈希值存在`/`，这会导致在解析`url`获取
+该shell脚本主要是为了方便生成哈希值，并且生成哈希值所采用的加密方式采用的是`SHA256`，这是因为在使用`SHA256`测试时发现其生成的哈希值存在`/`，这会导致在解析`url`获取
 对象名时出现问题，因此改用了`SHA1`。脚本调用方式如下：
 ```shell script
 ./hash-gen.sh "content"
@@ -259,4 +259,15 @@ echo "INFO: finish start elasticsearch && create index 'metadata' and mappings"
 ```shell script
 # 删除ES索引
 curl -X DELETE 'localhost:9200/metadata'
+```
+
+### 3. `bin/hash-gen.sh`
+
+在第三章中阐述的原因是错误的，并不是因为存在斜线的原因造成的，故在此纠正，现改为SHA256加密，BASE64编码。
+```shell script
+# 生成哈希值
+content=$1
+# shellcheck disable=SC2006
+echo "Start generate `${content}` hash code..."
+echo -n "$content" | openssl dgst -sha256 -binary | base64
 ```
