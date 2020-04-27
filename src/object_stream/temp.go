@@ -8,13 +8,15 @@ import (
     "strings"
 )
 
+// 对象临时信息
 type TempPutStream struct {
-    Server string
-    UUID string
+    Server string  // 临时信息所在的服务节点
+    UUID string  // 临时信息的唯一标识
 }
 
+// NewTempPutStream: 通过POST请求，将即将上传的数据的信息（数据大小和数据哈希值）存储在节点的temp下，用于与实际上传的数据进行校验（数据大小和数据哈希校验）
 func NewTempPutStream(server, objectName string, size int64) (*TempPutStream, error) {
-    // 创建临时对象
+    // 通过POST请求，将对象的数据大小和哈希值存储在数据节点的temp下
     request, err := http.NewRequest(http.MethodPost, "http://" + server + "/temp/" + objectName, nil)
     if err != nil {
         return nil, err
@@ -39,7 +41,8 @@ func NewTempPutStream(server, objectName string, size int64) (*TempPutStream, er
     }, nil
 }
 
-// 实现io.Writer的Write接口
+// 该io.Writer接口的实现，主要是将对象数据上传至存放了对象数据临时信息的数据节点的temp下的uuid.dat文件中
+// 我们使用patch方法用于局部数据更新，dataServer中的temp包下的patch方法会处理该请求
 func (t *TempPutStream) Write(p []byte) (n int, err error) {
     // 通过patch操作，将数据写入临时文件对象，并且校验数据大小，若不符合则删除为该对象创建的临时文件【该步仅校验文件大小】
     request, err := http.NewRequest(http.MethodPatch, "http://" + t.Server + "/temp/" + t.UUID, strings.NewReader(string(p)))

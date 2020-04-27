@@ -14,7 +14,7 @@ func put(w http.ResponseWriter, r *http.Request) {
     // 获取hash值
     hashVal := utils.GetHashFromHeader(r.Header)
     if hashVal == "" {
-        log.Println("API-Server HTTP Error: missing object hash in request header")
+        log.Println("apiServer HTTP Error: missing object hash in request header")
         w.WriteHeader(http.StatusBadRequest)
         return
     }
@@ -67,17 +67,26 @@ func get(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusNotFound)
         return
     }
-    // 存储对象数据
-    name := url.PathEscape(metadata.Hash)
-    stream, err := getStream(name)
+    // 通过GetStream()获取对象分片
+    stream, err := GetStream(url.PathEscape(metadata.Hash), metadata.Size)
     if err != nil {
         log.Println(err)
         w.WriteHeader(http.StatusNotFound)
         return
     }
-    io.Copy(w, stream)
+    // 在io.Copy()过程中，stream会执行Read()方法，而该Read()方法会对数据分片进行解码操作，如果该操作无误则可以正常读取数据，并将数据复制到w中
+    _, err = io.Copy(w, stream)
+    if err != nil {
+        log.Println(err)
+        w.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    // 保证能够正常解码数据后，在将修复的数据保存到数据节点中
+    stream.Close()
 }
 
+// 删除对象【逻辑删除】
 func del(w http.ResponseWriter, r *http.Request) {
     name := utils.GetObjectName(r.URL.EscapedPath())
     latestMetadata, err := es.SearchLatestVersion(name)

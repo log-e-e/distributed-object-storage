@@ -1,5 +1,5 @@
 # 安装net-tools
-sudo apt install net-tools
+sudo apt install net-tools &
 
 # 启动rabbitmq及添加rabbitmq环境变量
 sudo service rabbitmq-server start
@@ -82,3 +82,12 @@ for i in `seq 1 ${serverNodeAmount}` ; do
   # 存储每个服务节点的IP:PORT信息
   echo ${newListenAddr} >> ${ipAddrFilePath}
 done;
+
+chmod +x ./client.sh
+echo ""
+echo "---------------------------------------operation manual---------------------------------------"
+echo 'PUT: ./client.sh put objectName "objectContent..."'
+echo "GET: ./client.sh get objectName"
+echo "DELETE: ./client.sh delete objectName"
+echo "---------------------------------------operation manual---------------------------------------"
+echo ""

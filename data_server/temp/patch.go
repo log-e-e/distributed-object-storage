@@ -12,10 +12,11 @@ import (
     "path"
 )
 
-// 缓存对象数据，初步校验数据的大小是否匹配
+// 接收来自apiServer上传的对象数据，并将对象数据根据apiServer请求中的uuid存放到指定的uuid.dat文件中
+// 在将数据写入uuid.dat后校验该文件的大小与uuid文件中存放的tempInfo序列化信息中的size是否相等，若相等则完成该请求，否则说明数据被修改，直接删除相关临时文件
 func patch(w http.ResponseWriter, r *http.Request) {
     uuid := utils.GetObjectName(r.URL.EscapedPath())
-    // 获取uuid对应的临时文件存放的对象元数据信息，用于校验实际上传的数据的信息是否正确
+    // 反序列化uuid标志的临时存放了对象数据的校验信息文件
     tempinfo, err := readFromFile(uuid)
     if err != nil {
         log.Println(err)
@@ -23,8 +24,9 @@ func patch(w http.ResponseWriter, r *http.Request) {
         return
     }
     // 将实际从http中获取的数据写入data文件中
-    // infoFile和dataFile是在post请求时创建的，infoFile存放了对象的元数据，dataFile用于存放对象内容数据
+    // infoFile存放了tempinfo序列化数据的文件，该文件在后续会删除，故拼出该文件的路径
     infoFile := path.Join(global.StoragePath, "temp", uuid)
+    // dataFile是用于存放对象实际上传数据的临时文件
     dataFile := infoFile + ".dat"
     file, err := os.OpenFile(dataFile, os.O_WRONLY | os.O_APPEND, 0)
     if err != nil {
@@ -52,7 +54,7 @@ func patch(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// 读取存放对象元数据的临时文件
+// 反序列化结构体tempInfo的数据
 func readFromFile(uuid string) (*tempInfo, error) {
     file, err := os.Open(path.Join(global.StoragePath, "temp", uuid))
     if err != nil {

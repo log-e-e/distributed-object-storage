@@ -271,3 +271,17 @@ content=$1
 echo "Start generate `${content}` hash code..."
 echo -n "$content" | openssl dgst -sha256 -binary | base64
 ```
+
+## 第五章
+
+已实现本章所有功能。另外，通过新增shell脚本改进了测试的便利性，封装了RESTful api的命令请求，实现了通过执行脚本及提供相关的参数便可进行PUT、GET和DELETE操作：
+
+`bin/client.sh`
+```shell script
+# PUT操作
+./client.sh put objectName "content"
+# GET操作
+./client.sh get objectName
+# DELETE操作
+./client.sh delete objectName
+```

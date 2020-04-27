@@ -1,7 +1,6 @@
 package locate
 
 import (
-    "distributed-object-storage/src/err_utils"
     "distributed-object-storage/src/utils"
     "encoding/json"
     "net/http"
@@ -14,12 +13,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
     }
 
     location := Locate(utils.GetObjectName(r.URL.EscapedPath()))
-    if location == "" {
+    if len(location) == 0 {
         w.WriteHeader(http.StatusNotFound)
         return
     }
 
-    locationJson, err := json.Marshal(location)
-    err_utils.PanicNonNilError(err)
+    locationJson, _ := json.Marshal(location)
     w.Write(locationJson)
 }

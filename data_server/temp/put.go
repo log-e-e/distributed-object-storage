@@ -9,6 +9,7 @@ import (
     "path"
 )
 
+// put: 用于执行临时数据转正操作的请求
 func put(w http.ResponseWriter, r *http.Request) {
     uuid := utils.GetObjectName(r.URL.EscapedPath())
     // 从临时缓存区获取存储对象元数据的临时文件
