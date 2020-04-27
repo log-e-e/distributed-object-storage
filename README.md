@@ -283,6 +283,7 @@ echo -n "$content" | openssl dgst -sha256 -binary | base64
 **停止**：`./stop.sh`
 
 **客户端对象操作**
+
 ```shell script
 # PUT操作
 ./client.sh put objectName "content"
