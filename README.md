@@ -274,9 +274,15 @@ echo -n "$content" | openssl dgst -sha256 -binary | base64
 
 ## 第五章
 
-已实现本章所有功能。另外，通过新增shell脚本改进了测试的便利性，封装了RESTful api的命令请求，实现了通过执行脚本及提供相关的参数便可进行PUT、GET和DELETE操作：
+已实现本章所有功能。另外，通过新增shell脚本改进了测试的便利性，封装了RESTful api的命令请求，实现了通过执行脚本及提供相关的参数便可进行PUT、GET和DELETE操作。
 
-`bin/client.sh`
+在`bin`目录下可以执行以下命令：
+  
+**启动**：`./startup.sh`
+  
+**停止**：`./stop.sh`
+
+**客户端对象操作**
 ```shell script
 # PUT操作
 ./client.sh put objectName "content"
