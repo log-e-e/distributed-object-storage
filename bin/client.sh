@@ -8,7 +8,6 @@ dataServerNodeAmount=6  # 数据服务层节点数
 # 随机选取apiServer节点
 seed=$(date +%s)
 randomIndex=$(($seed%${apiServerNodeAmount}+$(($dataServerNodeAmount+1))))
-echo $randomIndex
 # 获取apiServer的IP:PORT，将其放到数组中
 ipAddrFilePath=".ipAddrs"
 index=1
@@ -22,8 +21,6 @@ do
   fi
   index=$(($index+1))
 done < ${ipAddrFilePath}
-
-echo "Choose apiServer node: ${apiServer}"
 
 # 操作类型
 PUT="put"  # 存储对象
