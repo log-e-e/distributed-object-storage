@@ -23,7 +23,7 @@ func NewRSEncoder(writers []io.Writer) *rsEncoder {
     }
 }
 
-// rsEncoder的规则：当数据p超过可支持的一次性写入的最大数据量时，就需要分批次写入
+// rsEncoder的规则：每个数据分片所在的数据节点会写入一个数据分片大小的数据，不足BLOCK_SIZE的数据量将会在最后进行数据提交时刷新进数据分片中
 // 需要注意的是，如果p的量不足一次性写入的最大量，则会延缓到Commit时才刷新写入对应的temp中
 func (rsEnc *rsEncoder) Write(p []byte) (n int, err error) {
     dataLength := len(p)

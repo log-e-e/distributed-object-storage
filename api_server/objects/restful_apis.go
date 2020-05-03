@@ -1,14 +1,66 @@
 package objects
 
 import (
+    "distributed-object-storage/api_server/heartbeat"
+    "distributed-object-storage/api_server/locate"
     "distributed-object-storage/src/es"
+    "distributed-object-storage/src/rs"
     "distributed-object-storage/src/utils"
+    "fmt"
     "io"
     "log"
     "net/http"
     "net/url"
     "strconv"
 )
+
+// POST操作：创建封装了对象信息及对象的数据节点临时写入流对象的结构体RSResumablePutStream，将其序列化返回
+func post(w http.ResponseWriter, r *http.Request) {
+    // 从http请求中获取对象信息【对象名、数据总大小、总数据哈希】
+    objectName := utils.GetObjectName(r.URL.EscapedPath())
+    size, err := strconv.ParseInt(r.Header.Get("size"), 0, 64)
+    if err != nil {
+        log.Println(err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    hash := utils.GetHashFromHeader(r.Header)
+    if hash == "" {
+        log.Printf("apiServer Error: missing object [%s] hash\n", objectName)
+        w.WriteHeader(http.StatusBadRequest)
+        return
+    }
+    // 哈希校验对象是否已存在，若存在则无需重复上传
+    if locate.Exist(url.PathEscape(hash)) {
+        err = es.AddVersion(objectName, size, hash)
+        if err != nil {
+            log.Println(err)
+            w.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+        w.WriteHeader(http.StatusOK)
+        return
+    }
+    // 若不存在，则按照以下步骤进行处理：
+    // 1. 选取指定数目的可用的数据节点用于存储对象分片
+    // 2. 获取封装了存储对象信息和各个数据节点写入流的流对象，将该对象序列化，在header中设置为location参数的值的组成部分
+    dataServers := heartbeat.ChooseServers(rs.ALL_SHARDS, nil)
+    if len(dataServers) != rs.ALL_SHARDS {
+        log.Println("apiServer Error: dataServer is not enough")
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    stream, err := rs.NewRSResumablePutStream(dataServers, objectName, size, hash)
+    if err != nil {
+        log.Println(err)
+        w.WriteHeader(http.StatusInternalServerError)
+        return
+    }
+    // 为什么封装起来？因为客户端的断点续传需要用到该对象的信息【对象名、对象数据大小、对象哈希】
+    w.Header().Set("location", stream.ToToken())
+    // 将RSResumablePutStream对象序列化后封装到header中返回给客户端
+    w.WriteHeader(http.StatusCreated)
+}
 
 func put(w http.ResponseWriter, r *http.Request) {
     // 获取hash值
@@ -74,15 +126,21 @@ func get(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusNotFound)
         return
     }
-    // 在io.Copy()过程中，stream会执行Read()方法，而该Read()方法会对数据分片进行解码操作，如果该操作无误则可以正常读取数据，并将数据复制到w中
-    _, err = io.Copy(w, stream)
-    if err != nil {
-        log.Println(err)
-        w.WriteHeader(http.StatusNotFound)
-        return
+    // 获取读取位置
+    offset, end := utils.GetOffsetFromHeader(r.Header)
+    log.Printf("apiServer INFO: in get(), get object data range [%d, %d]\n", offset, end)
+    // 将stream的读指针移动到offset位置，一般的文件读指针最初指向第一个字节
+    contentLength := metadata.Size
+    if offset != 0 {
+        contentLength = end - offset + 1
+        stream.Seek(offset, io.SeekCurrent)
+        w.Header().Set("content-range", fmt.Sprintf("bytes %d-%d/%d", offset, end, metadata.Size))
+        w.WriteHeader(http.StatusPartialContent)
     }
-
-    // 保证能够正常解码数据后，在将修复的数据保存到数据节点中
+    // 将数据写入响应体中
+    written, _ := io.CopyN(w, stream, contentLength)
+    log.Println("Wrote to response length:", written)
+    // 关闭steam流，并将可能存在的修复数据写入到对应的数据节点中
     stream.Close()
 }
 

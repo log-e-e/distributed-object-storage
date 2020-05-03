@@ -11,4 +11,6 @@ const (
     BLOCK_PER_SHARD = 8000
     // 每个对象的所有分片一次性可写入的最大数据量，超过该数据量则要分批写入
     BLOCK_SIZE = BLOCK_PER_SHARD * DATA_SHARDS
+    // 资源未找到
+    NOT_FOUND = -1
 )

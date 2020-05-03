@@ -86,7 +86,9 @@ done;
 chmod +x ./client.sh
 echo ""
 echo "---------------------------------------operation manual---------------------------------------"
-echo 'PUT: ./client.sh put objectName "objectContent..."'
+echo 'PUT:'
+echo '    ./client.sh put objectName -content "objectContent..."'
+echo '    ./client.sh put objectName -path object-file-path'
 echo "GET: ./client.sh get objectName"
 echo "DELETE: ./client.sh delete objectName"
 echo "---------------------------------------operation manual---------------------------------------"

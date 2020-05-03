@@ -56,3 +56,22 @@ func (s *RSGetStream) Close() {
         }
     }
 }
+
+func (s *RSGetStream) Seek(offset int64, whence int) (int64, error) {
+    if whence != io.SeekCurrent {
+        panic("Error: only support SeekCurrent")
+    }
+    if offset < 0 {
+        panic("Error: offset should not be lower than 0")
+    }
+    for offset != 0 {
+        length := int64(BLOCK_SIZE)
+        if length > offset {
+            length = offset
+        }
+        offset -= length
+        buff := make([]byte, length)
+        io.ReadFull(s, buff)
+    }
+    return offset, nil
+}

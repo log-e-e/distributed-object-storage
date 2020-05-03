@@ -4,7 +4,6 @@ import (
     "distributed-object-storage/api_server/heartbeat"
     "distributed-object-storage/src/rs"
     "fmt"
-    "log"
 )
 
 func putStream(hash string, size int64) (*rs.RSPutStream, error) {
@@ -14,7 +13,6 @@ func putStream(hash string, size int64) (*rs.RSPutStream, error) {
     if len(servers) != rs.ALL_SHARDS {
         return nil, fmt.Errorf("apiServer Error: cannot find enugh dataServers\n")
     }
-    log.Printf("apiServer INFO: Choose random data servers to save object %s: %v\n", hash, servers)
 
     return rs.NewRSPutStream(servers, hash, size)
 }

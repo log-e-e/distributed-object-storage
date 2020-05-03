@@ -1,9 +1,14 @@
 package utils
 
 import (
+    "log"
     "net/http"
     "strconv"
     "strings"
+)
+
+const (
+    PARAMENTER_LENGTH = 6
 )
 
 func GetObjectName(url string) string {
@@ -25,4 +30,22 @@ func GetHashFromHeader(h http.Header) string {
 func GetSizeFromHeader(h http.Header) int64 {
     size, _ := strconv.ParseInt(h.Get("content-length"), 0, 64)
     return size
+}
+
+func GetOffsetFromHeader(h http.Header) (offset, end int64) {
+    byteRange := h.Get("range")
+    log.Printf("GetOffsetFromHeader(): range content[%s]\n", byteRange)
+    if len(byteRange) < PARAMENTER_LENGTH {
+        return 0, 0
+    }
+    if byteRange[:PARAMENTER_LENGTH] != "bytes=" {
+        return 0, 0
+    }
+    bytesPositions := strings.Split(byteRange[PARAMENTER_LENGTH:], "-")
+    log.Printf("%v\n", bytesPositions)
+    offset, _ = strconv.ParseInt(bytesPositions[0], 0, 64)
+    end, _ = strconv.ParseInt(bytesPositions[1], 0, 64)
+    log.Printf("offset[%d]-end[%d]\n", offset, end)
+
+    return offset, end
 }
