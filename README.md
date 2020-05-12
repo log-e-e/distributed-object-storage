@@ -295,6 +295,8 @@ echo -n "$content" | openssl dgst -sha256 -binary | base64
 
 ## 第六章
 
+已实现本章所有功能，并且新增了客户端服务，用于支持对象操作，命令说明如下：
+
 ```shell script
 # 提供客户端相对便捷的操作命令
 # PUT:
