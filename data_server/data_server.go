@@ -20,6 +20,7 @@ func main() {
     go heartbeat.StartHeartbeat()
     go locate.ListenLocate()
     go temp.CleanTemp()
+
     http.HandleFunc("/objects/", objects.Handler)
     http.HandleFunc("/temp/", temp.Handler)
     log.Fatalln(http.ListenAndServe(global.ListenAddr, nil))

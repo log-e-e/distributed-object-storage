@@ -22,6 +22,7 @@ var (
     version = flag.Int("version", 0, "")
 )
 
+
 func main() {
     flag.Parse()
     if *operationType == "" || *objectName == "" || *apiServer == "" {

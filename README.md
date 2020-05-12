@@ -292,3 +292,17 @@ echo -n "$content" | openssl dgst -sha256 -binary | base64
 # DELETE操作
 ./client.sh delete objectName
 ```
+
+## 第六章
+
+```shell script
+# 提供客户端相对便捷的操作命令
+# PUT:
+# 两种方式：一种是直接提供对象数据，另一种是提供对象数据文件路径
+#     1. `./client.sh put objectName -content "object content"`
+#     2. `./client.sh put objectName -path object-file-path`
+# GET:
+#     1. `./client.sh get objectName filepath`
+# DELETE:
+#     1. `./client.sh delete objectName`
+```

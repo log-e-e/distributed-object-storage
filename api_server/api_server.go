@@ -18,6 +18,7 @@ func main() {
     global.CheckSharedVars()
 
     go heartbeat.ListenHeartbeat()
+
     http.HandleFunc("/objects/", objects.Handler)
     http.HandleFunc("/temp/", temp.Handler)
     http.HandleFunc("/locate/", locate.Handler)

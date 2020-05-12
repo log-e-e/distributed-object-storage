@@ -15,6 +15,7 @@ dataServerNodeAmount=6  # 数据服务层节点数
 # 随机选取apiServer节点
 seed=$(date +%s)
 randomIndex=$(($seed%${apiServerNodeAmount}+$(($dataServerNodeAmount+1))))
+
 # 获取apiServer的IP:PORT，将其放到数组中
 ipAddrFilePath=".ipAddrs"
 index=1
