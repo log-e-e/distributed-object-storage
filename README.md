@@ -1,8 +1,6 @@
 # distributed-object-storage
 源自《分布式对象存储——原理、架构及Go语言实现》
 
-**下载链接**：[《分布式对象存储——原理、架构及Go语言实现》](https://www.lanzous.com/i7dvkzg)
-
 ## 前言
 
 ### 1. 关于`bin`目录中的shell脚本
